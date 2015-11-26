@@ -13,8 +13,8 @@ public class LogFileProcessorPnC {
 	private static String LOG_DIRECTORY;
 	private final static int DEFAULT_THREADS = 10;
 
-	protected static boolean doneReading = false;
-	protected static boolean doneProcessing = false;
+	protected static volatile boolean doneReading = false;
+	protected static volatile boolean doneProcessing = false;
 
 	public static void main(String[] args) {
 		// LogFileProcessorPnC -t=4 -d="E:\\Files"
