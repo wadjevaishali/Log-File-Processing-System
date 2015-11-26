@@ -27,6 +27,9 @@ public class LogFileProcessorPnC {
 	private static String LOG_DIRECTORY;
 	private final static int DEFAULT_THREADS = 10;
 
+	protected static boolean doneReading = false;
+	protected static boolean doneProcessing = false;
+
 	public static void main(String[] args) {
 		// LogFileProcessorPnC -t=4 -d="E:\\Files"
 
@@ -55,7 +58,7 @@ public class LogFileProcessorPnC {
 			new Thread(new Writer(THREADCOUNT)).start();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}		
+		}
 	}
 
 	public static boolean setLogDirectory(String[] args) {
@@ -102,7 +105,8 @@ public class LogFileProcessorPnC {
 		System.out
 				.println("Use syntax: LogFileProcessorPnC -d=\"LOG_DIRECTORY\" -t=COUNT");
 		System.out.println("-d=\"LOG_DIRECTORY\" is Necessary");
-		System.out.println("-t=COUNT is Optional. Range is 1 to 100 inclusive. Default is 10");
+		System.out
+				.println("-t=COUNT is Optional. Range is 1 to 100 inclusive. Default is 10");
 	}
 }
 
@@ -137,7 +141,6 @@ class Reader implements Runnable {
 
 		for (Path path : directoryStream) {
 			futureObjects.add(prodExecutor.submit(new Callable<LogData>() {
-
 				@Override
 				public LogData call() throws Exception {
 					LogData data = null;
@@ -163,6 +166,7 @@ class Reader implements Runnable {
 			}
 		}
 
+		LogFileProcessorPnC.doneReading = true;
 		prodExecutor.shutdown();
 	}
 }
@@ -173,7 +177,8 @@ class Processor implements Runnable {
 
 	@Override
 	public void run() {
-		while (true) {
+		while (!LogFileProcessorPnC.doneReading
+				|| !LogFileProcessorPnC.ReaderProcessorQueue.isEmpty()) {
 			LogData data = null;
 			try {
 				data = LogFileProcessorPnC.ReaderProcessorQueue.take();
@@ -190,6 +195,8 @@ class Processor implements Runnable {
 				e.printStackTrace();
 			}
 		}
+
+		LogFileProcessorPnC.doneProcessing = true;
 	}
 }
 
@@ -203,20 +210,24 @@ class Writer implements Runnable {
 	@Override
 	public void run() {
 		ExecutorService consExecutor = Executors.newFixedThreadPool(tCount);
-		while (!LogFileProcessorPnC.ProcessorWriterQueue.isEmpty()) {
+
+		while (!LogFileProcessorPnC.doneProcessing
+				|| !LogFileProcessorPnC.ProcessorWriterQueue.isEmpty()) {
 			consExecutor.execute(new Runnable() {
 				@Override
 				public void run() {
-					try {
-						LogData data = LogFileProcessorPnC.ProcessorWriterQueue
-								.take();
-						System.out.println(data.path + " is writing.");
-						Files.write(data.path, data.lines,
-								StandardOpenOption.CREATE);
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+					while (!LogFileProcessorPnC.ProcessorWriterQueue.isEmpty()) {
+						try {
+							LogData data = LogFileProcessorPnC.ProcessorWriterQueue
+									.take();
+							System.out.println(data.path + " is writing.");
+							Files.write(data.path, data.lines,
+									StandardOpenOption.CREATE);
+						} catch (IOException e) {
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			});
