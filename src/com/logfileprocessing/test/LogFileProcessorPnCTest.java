@@ -10,17 +10,15 @@ public class LogFileProcessorPnCTest {
 
 	@Test
 	public void invalidThreadCount() {
-		String[] args = {"-t=aaa", "-d=E:\\LogFiles"};
-		int result = LogFileProcessorPnC.main(args);
-		assertEquals("Program exited due to invalid thread count", 0, result);		
+		String[] args = {"-t=aaa", "-d=E:\\LogFiles"};				
+		boolean result = LogFileProcessorPnC.setThreadCount(args);
+		assertEquals("Program exited due to invalid thread count", false, result);		
 	}
 	
 	@Test
 	public void isDirectoryOrNot() {
 		String[] args = {"-t=4", "-d=g:\\LogFiles"};
-		int result = LogFileProcessorPnC.main(args);
-		assertEquals("Program exited due to invalid directory", 0, result);		
+		boolean result = LogFileProcessorPnC.setLogDirectory(args);
+		assertEquals("Program exited due to invalid directory", false, result);		
 	}
-	
-
 }

@@ -27,26 +27,26 @@ public class LogFileProcessorPnC {
 	private static String LOG_DIRECTORY;
 	private final static int DEFAULT_THREADS = 10;
 
-	public static int main(String[] args) {
+	public static void main(String[] args) {
 		// LogFileProcessorPnC -t=4 -d="E:\\Files"
 
 		if (args == null || args.length == 0) {
 			printHelp();
-			return 0;
+			return;
 		}
 
 		boolean isSet = setLogDirectory(args);
 		if (!isSet) {
 			System.out.println("Invalid argument or log directory");
 			printHelp();
-			return 0;
+			return;
 		}
 
 		isSet = setThreadCount(args);
 		if (!isSet) {
 			System.out.println("Invalid thread count");
 			printHelp();
-			return 0;
+			return;
 		}
 
 		try {
@@ -55,11 +55,10 @@ public class LogFileProcessorPnC {
 			new Thread(new Writer(THREADCOUNT)).start();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-		return 1;
+		}		
 	}
 
-	private static boolean setLogDirectory(String[] args) {
+	public static boolean setLogDirectory(String[] args) {
 		for (String arg : args) {
 			if (arg.trim().contains("-d=")) {
 				LOG_DIRECTORY = arg.trim().substring(3);
@@ -71,7 +70,7 @@ public class LogFileProcessorPnC {
 		return false;
 	}
 
-	private static boolean setThreadCount(String[] args) {
+	public static boolean setThreadCount(String[] args) {
 
 		for (String arg : args) {
 			if (arg.trim().contains("-t=")) {
